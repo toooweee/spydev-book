@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TokenModule } from './token/token.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { NextGisModule } from './next-gis/next-gis.module';
 
 @Module({
     imports: [
@@ -17,6 +18,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
             isGlobal: true,
         }),
         TokenModule,
+        NextGisModule,
     ],
     controllers: [],
     providers: [
