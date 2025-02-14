@@ -7,6 +7,8 @@ export function App() {
     return (
         <ThemeProvider theme={AppTheme}>
             <Header />
+            {/*mainPage
+                footer*/}
         </ThemeProvider>
     );
 }

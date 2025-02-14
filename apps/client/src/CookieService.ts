@@ -1,10 +1,4 @@
 class CookieService {
-    /**
-     * Устанавливает cookie с указанным именем, значением и опциями.
-     * @param name - Имя cookie
-     * @param value - Значение cookie
-     * @param options - Дополнительные опции (expires, path, secure, httpOnly)
-     */
     public setCookie(name: string, value: string, options: CookieOptions = {}): void {
         const { expires, path, secure, sameSite } = options;
 
@@ -29,11 +23,6 @@ class CookieService {
         document.cookie = cookieString;
     }
 
-    /**
-     * Читает значение cookie по имени.
-     * @param name - Имя cookie
-     * @returns Значение cookie или null, если cookie не существует
-     */
     public getCookie(name: string): string | null {
         const cookies = document.cookie.split('; ').find((cookie) => {
             return cookie.startsWith(`${encodeURIComponent(name)}=`);
@@ -47,20 +36,10 @@ class CookieService {
         return null;
     }
 
-    /**
-     * Проверяет, существует ли cookie с указанным именем.
-     * @param name - Имя cookie
-     * @returns true, если cookie существует, иначе false
-     */
     public hasCookie(name: string): boolean {
         return this.getCookie(name) !== null;
     }
 
-    /**
-     * Удаляет cookie с указанным именем.
-     * @param name - Имя cookie
-     * @param options - Дополнительные опции (path)
-     */
     public deleteCookie(name: string, options: { path?: string } = {}): void {
         const { path } = options;
 
