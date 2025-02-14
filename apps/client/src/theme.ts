@@ -14,7 +14,7 @@ declare module "@mui/material/styles" {
   }
 }
 
-const AppTheme: ThemeOptions = createTheme({
+const AppTheme = createTheme({
     palette: {
         primary: {
             light: "#B22222", // Светлый красный
@@ -28,7 +28,7 @@ const AppTheme: ThemeOptions = createTheme({
             dark: "#0D243F", // Тёмный синий
         },
         background: {
-            default: "#FFFFFF", // Бежевый фон
+            default: "#e4e4e4", // Бежевый фон
             paper: "#FFFFFF", // Белый фон для карточек и документов
         },
         text: {
@@ -66,7 +66,8 @@ const AppTheme: ThemeOptions = createTheme({
             color: "#000000",
         },
         h6: {
-            color: '#000000'
+            color: '#000000',
+            fontSize: '24px'
         },
         body1: {
             fontSize: "1rem",
@@ -97,7 +98,6 @@ const AppTheme: ThemeOptions = createTheme({
         MuiAppBar: {
             styleOverrides: {
                 root: {
-                    borderRadius: "0"
                 }
             }
         },
