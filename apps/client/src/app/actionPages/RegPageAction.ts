@@ -1,6 +1,5 @@
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { validationSchema, FormValues } from '../validation/regValidation';
+
+import { FormValues } from '../validation/regValidation';
 
 
 // Обработчик отправки формы
