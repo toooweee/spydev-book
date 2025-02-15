@@ -1,16 +1,20 @@
 import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { NextGisService } from './next-gis.service';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+@ApiBearerAuth()
 @Controller('next-gis')
 export class NextGisController {
     constructor(private readonly nextGisService: NextGisService) {}
 
-    @ApiOperation({ summary: 'Получить все записи' })
-    @ApiResponse({ status: 200, description: 'Держи.' })
     @Get('all')
-    async getAllRecords(): Promise<any[]> {
+    async getAllRecords() {
         return this.nextGisService.getRecords();
+    }
+
+    @Get('municipalities')
+    async getMunicipalities() {
+        return this.nextGisService.getMunicipalities();
     }
 
     @ApiOperation({ summary: 'Добавить героя' })
@@ -18,6 +22,11 @@ export class NextGisController {
     @Post()
     async addRecord(@Body() data: any): Promise<any> {
         return this.nextGisService.addRecord(data);
+    }
+
+    @Get('layer/:layerId')
+    async getLayer(@Param('layerId') layerId: number) {
+        return this.nextGisService.getLayerData(layerId);
     }
 
     @Put(':id')
