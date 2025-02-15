@@ -31,3 +31,30 @@ export enum Conflict {
 //         setPhotoPreview(URL.createObjectURL(file));
 //     }
 // };
+
+export const heroes = [
+    {
+        id: '1',
+        firstName: 'Иван',
+        middleName: 'Иванович',
+        lastName: 'Петров',
+        lifeDate: null,
+        photo: undefined,
+    },
+    {
+        id: '2',
+        firstName: 'Александр',
+        middleName: 'Сергеевич',
+        lastName: 'Сидоров',
+        lifeDate: null,
+        photo: undefined,
+    },
+    {
+        id: '3',
+        firstName: 'Мария',
+        middleName: 'Александровна',
+        lastName: 'Кузнецова',
+        lifeDate: null,
+        photo: undefined,
+    },
+];
