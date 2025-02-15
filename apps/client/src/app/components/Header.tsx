@@ -34,11 +34,11 @@ export const Header = () => {
                     <Tab label="Главная" component={Link} to="/" />
                     <Tab label="Карта" component={Link} to="/map" />
                 </Tabs>
-                {user ? (
+                {/*{user ? (*/}
                     <Button component={Link} variant="contained" color="primary" to={'/auth'}>
                         Вход
                     </Button>
-                ) : (
+                {/*// ) : (*/}
                     <>
                         <Button onClick={toggleDrawer(true)} color='inherit'>
                             <Person3Outlined/>
@@ -60,7 +60,7 @@ export const Header = () => {
                             </Tabs>
                         </Drawer>
                     </>
-                )}
+                {/*)}*/}
             </Toolbar>
         </AppBar>
     );
