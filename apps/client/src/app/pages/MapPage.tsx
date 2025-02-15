@@ -1,10 +1,18 @@
 import React from 'react';
+import { Box, Container, Typography } from '@mui/material';
 
 const MapPage = () => {
     return (
-        <div>
+        <Box
+            sx={{m: '3rem'}}
+        >
+            <Container>
+                <Typography variant='h1'>Карта</Typography>
+                <Box>
 
-        </div>
+                </Box>
+            </Container>
+        </Box>
     );
 };
 
