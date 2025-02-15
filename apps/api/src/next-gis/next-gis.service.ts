@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 import { wrapper } from 'axios-cookiejar-support';
@@ -69,12 +69,64 @@ export class NextGisService {
     async getRecords(): Promise<any[]> {
         await this.ensureAuth();
         try {
-            const response = await this.axiosInstance.get(`/resource/${this.configService.get('LAYER_ID')}/feature/`);
-            this.logger.log(`Получены записи: ${JSON.stringify(response.data)}`);
-            return response.data;
+            const layerId = this.configService.get('LAYER_ID') || 8806; // Убедитесь в правильности ID
+            const response = await this.axiosInstance.get(`/resource/${layerId}/geojson`);
+            return response.data.features;
         } catch (error) {
             this.logger.error('Ошибка при получении записей', error);
-            throw error;
+            throw new HttpException('Failed to get records', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getMunicipalities(): Promise<{ layers: number[] }> {
+        await this.ensureAuth();
+        try {
+            const webmapId = '8901';
+            const response = await this.axiosInstance.get<{
+                webmap: {
+                    root_item: {
+                        children: Array<{
+                            item_type: string;
+                            style_parent_id?: number;
+                        }>;
+                    };
+                };
+            }>(`/resource/${webmapId}`);
+
+            const layers = response.data.webmap.root_item.children.filter(
+                (layer): layer is { item_type: 'layer'; style_parent_id: number } =>
+                    layer.item_type === 'layer' && typeof layer.style_parent_id === 'number',
+            );
+
+            const layerIds = [...new Set(layers.map((layer) => layer.style_parent_id))];
+
+            this.logger.log(`Найдены слои муниципалитетов: ${layerIds}`);
+            return { layers: layerIds };
+        } catch (error) {
+            this.logger.error('Ошибка при получении границ муниципалитетов', error);
+            throw new HttpException('Failed to get municipalities', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getLayerData(layerId: number): Promise<any> {
+        await this.ensureAuth();
+        try {
+            // Прямой запрос к векторному слою
+            const response = await this.axiosInstance.get(`/resource/${layerId}/geojson`, {
+                params: { srs: 3857 },
+            });
+
+            if (!response.data?.features) {
+                throw new Error('Некорректный формат GeoJSON');
+            }
+
+            // Логируем первый feature для проверки
+            this.logger.debug(`Данные слоя ${layerId}:`, response.data.features[0]);
+
+            return response.data;
+        } catch (error) {
+            this.logger.error(`Ошибка при получении слоя ${layerId}`, error);
+            throw new HttpException(`Ошибка загрузки слоя: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
