@@ -38,9 +38,8 @@ export const Header = () => {
                     </Button>
                 ) : (
                     <>
-                        <Button onClick={toggleDrawer(true)}>
-                            <Person3Outlined color='inherit'/>
-                            das
+                        <Button onClick={toggleDrawer(true)} color='inherit'>
+                            <Person3Outlined/>
                         </Button>
                         <Drawer
                             anchor="right"
