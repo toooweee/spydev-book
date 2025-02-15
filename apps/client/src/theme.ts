@@ -54,7 +54,7 @@ const AppTheme = createTheme({
         },
     },
     typography: {
-        fontFamily: `Montserrat, sans-serif`,
+        fontFamily: `"Montserrat", sans-serif`,
         h1: {
             fontSize: "2.5rem",
             fontWeight: 700,
@@ -66,7 +66,7 @@ const AppTheme = createTheme({
             color: "#000000",
         },
         h6: {
-            color: '#000000',
+            color: '#FFFFFF',
             fontSize: '24px'
         },
         body1: {
