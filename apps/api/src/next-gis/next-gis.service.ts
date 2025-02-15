@@ -5,12 +5,16 @@ import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
 import * as FormData from 'form-data';
 
+import wellknown from 'wellknown';
+import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+import buffer from '@turf/buffer';
+
 @Injectable()
 export class NextGisService {
     private readonly logger = new Logger(NextGisService.name);
     private readonly nextgisUrl: string;
     private axiosInstance: AxiosInstance;
-    private cookieJar: CookieJar;
+    private readonly cookieJar: CookieJar;
 
     constructor(private readonly configService: ConfigService) {
         this.nextgisUrl = this.configService.get<string>('NEXTGIS_URL') || 'https://geois2.orb.ru/api';
@@ -39,7 +43,6 @@ export class NextGisService {
         );
     }
 
-    // Метод авторизации: отправляем логин и пароль, куки сохраняются в cookieJar
     async login(): Promise<void> {
         try {
             const response = await this.axiosInstance.post('/component/auth/login', {
@@ -62,7 +65,7 @@ export class NextGisService {
         }
     }
 
-    // Получение записей из слоя (LAYER_ID должен быть равен 8806)
+    // Получение записей из слоя (например, LAYER_ID = 8806)
     async getRecords(): Promise<any[]> {
         await this.ensureAuth();
         try {
@@ -150,6 +153,74 @@ export class NextGisService {
         } catch (error) {
             this.logger.error('Ошибка при удалении вложения', error);
             throw error;
+        }
+    }
+
+    // Новый метод для обработки клика с карты.
+    // Фронтенд должен отправлять данные о клике в виде объекта:
+    // Если клик происходит по точке, можно отправить { geom: "POINT(3948446 489723)" }
+    // Если же отправляется полигон, то { geom: "POLYGON((...))" }
+    // Метод преобразует точку в буфер (полигон) и затем ищет героя, чья точка попадает внутрь.
+    async handleClick(clickData: any): Promise<any> {
+        this.logger.log(`Получен клик с данными: ${JSON.stringify(clickData)}`);
+
+        if (!clickData.geom) {
+            return { message: 'Отсутствует поле geom' };
+        }
+
+        // Парсим переданную WKT-строку
+        const parsedClick = wellknown.parse(clickData.geom);
+        if (!parsedClick) {
+            return { message: 'Неверный формат WKT для клика' };
+        }
+
+        let clickFeature: GeoJSON.Feature<GeoJSON.Polygon>;
+        if (parsedClick.type === 'Point') {
+            // Если пришла точка, создаём буфер (полигон) вокруг неё (например, радиус 10 метров)
+            const pointFeature: GeoJSON.Feature<GeoJSON.Point> = {
+                type: 'Feature',
+                geometry: parsedClick as GeoJSON.Point,
+                properties: {},
+            };
+            const buffered = buffer(pointFeature, 10, { units: 'meters' });
+            // Предполагается, что буфер возвращает Feature с типом Polygon
+            clickFeature = buffered as GeoJSON.Feature<GeoJSON.Polygon>;
+        } else if (parsedClick.type === 'Polygon' || parsedClick.type === 'MultiPolygon') {
+            // Если пришёл полигон, оборачиваем его в Feature
+            clickFeature = {
+                type: 'Feature',
+                geometry: parsedClick as GeoJSON.Polygon,
+                properties: {},
+            };
+        } else {
+            return { message: 'Геометрия клика должна быть точкой или полигоном' };
+        }
+
+        // Получаем все записи (героев) из слоя
+        const records = await this.getRecords();
+
+        // Ищем героя, у которого геометрия (POINT) попадает в область клика
+        const matchingHero = records.find((record) => {
+            if (record.geom) {
+                const parsedHero = wellknown.parse(record.geom);
+                if (parsedHero && parsedHero.type === 'Point') {
+                    const heroFeature: GeoJSON.Feature<GeoJSON.Point> = {
+                        type: 'Feature',
+                        geometry: parsedHero as GeoJSON.Point,
+                        properties: {},
+                    };
+                    return booleanPointInPolygon(heroFeature, clickFeature);
+                }
+            }
+            return false;
+        });
+
+        if (matchingHero) {
+            this.logger.log(`Найден герой: ${JSON.stringify(matchingHero)}`);
+            return { message: 'Герой найден', hero: matchingHero };
+        } else {
+            this.logger.log('Герой не найден по клику');
+            return { message: 'Герой не найден', clickData };
         }
     }
 }
