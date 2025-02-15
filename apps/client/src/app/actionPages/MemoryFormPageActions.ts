@@ -13,7 +13,7 @@ export const useFileChange = () => {
         middleName: '',
         lastName: '',
         doc: [],
-        kontrakt: '',
+        kontrakt: [],
         nagrads:'',
         raion: ''
     });

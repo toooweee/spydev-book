@@ -26,13 +26,15 @@ export const Header = () => {
             <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                     <MenuBookIcon sx={{ mr: 1 }} />
-                    <Typography variant="h6">Книга Памяти</Typography>
+                    <Typography variant="h6"
+                        sx={{display: {xs: 'none', sm: 'flex'}}}
+                    >Книга Памяти</Typography>
                 </Box>
                 <Tabs value={tabValue} textColor="inherit" indicatorColor="secondary">
                     <Tab label="Главная" component={Link} to="/" />
                     <Tab label="Карта" component={Link} to="/map" />
                 </Tabs>
-                {user === true ? (
+                {user ? (
                     <Button component={Link} variant="contained" color="primary" to={'/auth'}>
                         Вход
                     </Button>

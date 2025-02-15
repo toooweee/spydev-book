@@ -21,7 +21,7 @@ const UploadPhoto = () => {
         <Card
             sx={{
                 maxWidth: 300,
-                height: 320,
+                height: '100%',
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",

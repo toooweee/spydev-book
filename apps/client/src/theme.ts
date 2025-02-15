@@ -1,45 +1,31 @@
-import {createTheme} from "@mui/material";
-
-declare module "@mui/material/styles" {
-  interface PaletteColor {
-    900?: string; // Добавляем поддержку кастомных оттенков
-    800?: string; // Добавляем поддержку кастомных оттенков
-    700?: string; // Добавляем поддержку кастомных оттенков
-    600?: string; // Добавляем поддержку кастомных оттенков
-    500?: string; // Добавляем поддержку кастомных оттенков
-    400?: string; // Добавляем поддержку кастомных оттенков
-    300?: string; // Добавляем поддержку кастомных оттенков
-    200?: string; // Добавляем поддержку кастомных оттенков
-    100?: string; // Добавляем поддержку кастомных оттенков
-  }
-}
+import { createTheme } from "@mui/material";
 
 const AppTheme = createTheme({
     palette: {
         primary: {
-            light: "#B22222", // Светлый красный
-            main: "#F02D36", // Тёмно-красный (основной)
-            dark: "#5A0000", // Очень тёмный красный
-            100: "#FFFFFF"
+            light: "#B22222",
+            main: "#F02D36",
+            dark: "#5A0000",
+            100: "#FFFFFF",
         },
         secondary: {
-            light: "#3B5F87", // Светлый синий
-            main: "#B22222", // Глубокий синий (основной)
-            dark: "#0D243F", // Тёмный синий
+            light: "#3B5F87",
+            main: "#B22222",
+            dark: "#0D243F",
         },
         background: {
-            default: "#e4e4e4", // Бежевый фон
-            paper: "#FFFFFF", // Белый фон для карточек и документов
+            default: "#e4e4e4",
+            paper: "#FFFFFF",
         },
         text: {
-            primary: "#000000", // Чёрный текст
-            secondary: "#000000", // Серый текст
-            disabled: "#000000", // Отключённый текст
+            primary: "#000000",
+            secondary: "#000000",
+            disabled: "#000000",
         },
         warning: {
-            light: "#E6C76F", // Светлый золотой
-            main: "#C9A227", // Золотой (основной)
-            dark: "#8A6E1F", // Тёмный золотой
+            light: "#E6C76F",
+            main: "#C9A227",
+            dark: "#8A6E1F",
         },
         grey: {
             100: "#F5F5F5",
@@ -56,18 +42,24 @@ const AppTheme = createTheme({
     typography: {
         fontFamily: `"Montserrat", sans-serif`,
         h1: {
-            fontSize: "2.5rem",
+            fontSize: "2rem",
             fontWeight: 700,
             color: "#000000",
+            "@media (max-width:600px)": {
+                fontSize: "1.5rem",
+            },
         },
         h2: {
-            fontSize: "2rem",
+            fontSize: "1.75rem",
             fontWeight: 600,
             color: "#000000",
+            "@media (max-width:600px)": {
+                fontSize: "1.25rem",
+            },
         },
         h6: {
-            color: '#FFFFFF',
-            fontSize: '24px'
+            color: "#FFFFFF",
+            fontSize: "24px",
         },
         body1: {
             fontSize: "1rem",
@@ -98,19 +90,30 @@ const AppTheme = createTheme({
         MuiAppBar: {
             styleOverrides: {
                 root: {
-                    borderRadius: '0'
-                }
-            }
+                    borderRadius: "0",
+                },
+            },
         },
         MuiTextField: {
             styleOverrides: {
                 root: {
-                    borderRadius: '30px'
-                }
-            }
-        }
+                    borderRadius: "30px",
+                    "@media (max-width:600px)": {
+                        width: "100%",
+                    },
+                },
+            },
+        },
+        MuiContainer: {
+            styleOverrides: {
+                root: {
+                    "@media (max-width:600px)": {
+                        padding: "10px",
+                    },
+                },
+            },
+        },
     },
 });
-
 
 export default AppTheme;
