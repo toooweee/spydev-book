@@ -82,7 +82,7 @@ const AppTheme = createTheme({
             styleOverrides: {
                 root: {
                     padding: "16px",
-                    borderRadius: "12px",
+                    borderRadius: "0px",
                     boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
                 },
             },
@@ -113,6 +113,13 @@ const AppTheme = createTheme({
                 },
             },
         },
+        MuiDrawer: {
+            styleOverrides: {
+                root: {
+                    boxSizing: "border-box",
+                }
+            }
+        }
     },
 });
 
