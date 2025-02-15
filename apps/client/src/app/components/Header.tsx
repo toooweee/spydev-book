@@ -1,34 +1,66 @@
-import React from "react";
-import { AppBar, Box, Button, Container, Tab, Tabs, Toolbar, Typography } from '@mui/material';
+import React, { useState } from 'react';
+import { AppBar, Box, Button, Drawer, Tab, Tabs, Toolbar, Typography } from '@mui/material';
 import MenuBookIcon from "@mui/icons-material/MenuBook";
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { Person3Outlined } from '@mui/icons-material';
 
 export const Header = () => {
     const location = useLocation();
-    const userId = useParams()
-    const tabValue = Math.max(["/", "/map"].indexOf(location.pathname), 0);
+    const tabValue = Math.max(["/", "/map", "/user"].indexOf(location.pathname), 0);
+    const [user, setUser] = useState<boolean>(false);
+    const [openDrawer, setOpenDrawer] = useState(false);
+
+    const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
+        if (
+            event.type === 'keydown' &&
+            ((event as React.KeyboardEvent).key === 'Tab' ||
+                (event as React.KeyboardEvent).key === 'Shift')
+        ) {
+            return;
+        }
+        setOpenDrawer(open);
+    };
 
     return (
-        <Container
-            sx={{m: '1rem auto'}}
-        >
-            <AppBar position="static" color='default'>
-                <Container>
-                    <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                            <MenuBookIcon sx={{ mr: 1 }} />
-                            <Typography variant="h6">Книга Памяти</Typography>
-                        </Box>
-                        <Tabs value={tabValue} textColor="inherit" indicatorColor='secondary'>
-                            <Tab label="Главная" component={Link} to="/" />
-                            <Tab label="Карта" component={Link} to="/map" />
-                        </Tabs>
-                        <Button component={Link} variant="contained" color="inherit" to={'/auth'}>
-                            Вход
+        <AppBar position="static" color="primary">
+            <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <MenuBookIcon sx={{ mr: 1 }} />
+                    <Typography variant="h6">Книга Памяти</Typography>
+                </Box>
+                <Tabs value={tabValue} textColor="inherit" indicatorColor="secondary">
+                    <Tab label="Главная" component={Link} to="/" />
+                    <Tab label="Карта" component={Link} to="/map" />
+                </Tabs>
+                {user === true ? (
+                    <Button component={Link} variant="contained" color="primary" to={'/auth'}>
+                        Вход
+                    </Button>
+                ) : (
+                    <>
+                        <Button onClick={toggleDrawer(true)}>
+                            <Person3Outlined color='inherit'/>
+                            das
                         </Button>
-                    </Toolbar>
-                </Container>
-            </AppBar>
-        </Container>
+                        <Drawer
+                            anchor="right"
+                            open={openDrawer}
+                            onClose={toggleDrawer(false)}
+                        >
+                            Меню
+                            <Tabs
+                                value={tabValue}
+                                textColor="inherit"
+                                indicatorColor="secondary"
+                                orientation="vertical"
+                                sx={{ p: 2 }}
+                            >
+                                <Tab label="Личный кабинет" component={Link} to="/user" />
+                            </Tabs>
+                        </Drawer>
+                    </>
+                )}
+            </Toolbar>
+        </AppBar>
     );
 };

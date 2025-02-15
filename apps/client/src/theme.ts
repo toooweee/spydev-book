@@ -1,4 +1,4 @@
-import {createTheme, ThemeOptions} from "@mui/material";
+import {createTheme} from "@mui/material";
 
 declare module "@mui/material/styles" {
   interface PaletteColor {
@@ -18,13 +18,13 @@ const AppTheme = createTheme({
     palette: {
         primary: {
             light: "#B22222", // Светлый красный
-            main: "#9C9C9C", // Тёмно-красный (основной)
+            main: "#F02D36", // Тёмно-красный (основной)
             dark: "#5A0000", // Очень тёмный красный
             100: "#FFFFFF"
         },
         secondary: {
             light: "#3B5F87", // Светлый синий
-            main: "#1E3A5F", // Глубокий синий (основной)
+            main: "#B22222", // Глубокий синий (основной)
             dark: "#0D243F", // Тёмный синий
         },
         background: {
@@ -54,7 +54,7 @@ const AppTheme = createTheme({
         },
     },
     typography: {
-        fontFamily: `"Roboto", "Arial", sans-serif`,
+        fontFamily: `Montserrat, sans-serif`,
         h1: {
             fontSize: "2.5rem",
             fontWeight: 700,
@@ -98,6 +98,7 @@ const AppTheme = createTheme({
         MuiAppBar: {
             styleOverrides: {
                 root: {
+                    borderRadius: '0'
                 }
             }
         },
