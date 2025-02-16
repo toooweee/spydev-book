@@ -12,32 +12,19 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UserResponse } from './responses';
 import { CurrentUser, Roles } from '@app/common/decorators';
 import { JwtPayload } from '../auth/interfaces';
 import { RolesGuard } from '../auth/guards/role.guard';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CreateRegisterRequestDto } from './dto/create-register-request.dto';
+import { Public } from '@app/common/decorators';
 
 @ApiTags('User')
 @ApiBearerAuth()
 @Controller('user')
-@Controller('user')
 export class UserController {
     constructor(private readonly userService: UserService) {}
-
-    @ApiOperation({ summary: 'Создание нового пользователя' })
-    @ApiResponse({
-        status: 201,
-        description: 'Пользователь успешно создан',
-        type: CreateUserDto,
-    })
-    @UseInterceptors(ClassSerializerInterceptor)
-    @Post()
-    async create(@Body() createUserDto: CreateUserDto) {
-        const user = await this.userService.create(createUserDto);
-        return new UserResponse(user);
-    }
 
     @UseInterceptors(ClassSerializerInterceptor)
     @Get()
@@ -58,6 +45,39 @@ export class UserController {
         });
 
         return result;
+    }
+
+    @Public()
+    @Post('/registration-request')
+    @ApiOperation({ summary: 'Отправить заявку на регистрацию' })
+    @ApiResponse({
+        status: 201,
+        description: 'Заявка успешно отправлена',
+        type: CreateRegisterRequestDto,
+    })
+    async createRegistrationRequest(@Body() createRegisterRequestDto: CreateRegisterRequestDto) {
+        return this.userService.createRegistrationRequest(createRegisterRequestDto);
+    }
+
+    // 2. Одобрение заявки (только для админа)
+    @Patch('/registration-request/:id/approve')
+    @UseGuards(RolesGuard)
+    @Roles('ADMIN')
+    @ApiOperation({ summary: 'Одобрить заявку на регистрацию' })
+    async approveRegistrationRequest(@Param('id', ParseUUIDPipe) requestId: string) {
+        return this.userService.approveRegistrationRequest(requestId);
+    }
+
+    // 3. Отклонение заявки (только для админа)
+    @Patch('/registration-request/:id/reject')
+    @UseGuards(RolesGuard)
+    @Roles('ADMIN')
+    @ApiOperation({ summary: 'Отклонить заявку на регистрацию' })
+    async rejectRegistrationRequest(
+        @Param('id', ParseUUIDPipe) requestId: string,
+        @Body('adminComment') adminComment: string,
+    ) {
+        return this.userService.rejectRegistrationRequest(requestId, adminComment);
     }
 
     @Get('me')

@@ -8,6 +8,7 @@ import { TokenModule } from './token/token.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { NextGisModule } from './next-gis/next-gis.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
     imports: [
@@ -19,6 +20,7 @@ import { NextGisModule } from './next-gis/next-gis.module';
         }),
         TokenModule,
         NextGisModule,
+        MailModule,
     ],
     controllers: [],
     providers: [
