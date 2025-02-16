@@ -1,16 +1,41 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Container, FormControl, TextField, Typography, Button, Alert, Card } from '@mui/material';
 import { useRegForm } from '../hooks/useRegForm';
 import { onSubmit } from '../actionPages/RegPageAction';
 import { Link } from 'react-router-dom';
+import { FormValues } from '../validation/regValidation';
+import { API_CONFIG } from '../../config';
+import { authRequestDTO, loginResponseDTO, registerResponseDTO, regRequestDTO } from '../Helpers/AuthHelpers';
+import apiService from '../Service/ApiService';
 
 const RegPage: React.FC = () => {
     const { register, handleSubmit, errors } = useRegForm();
 
+    const[success, setSuccess] = useState(false);
+
+    const reg = async (data: FormValues) => {
+        console.log(data);
+        const url = `${API_CONFIG.HOST}${API_CONFIG.AUTH_REGISTER}`;
+        const request: regRequestDTO = {
+            email: data.email,
+            government: data.departmentName,
+            governmentName: data.organization,
+            name: data.firstName,
+            surname: data.lastName,
+            phoneNumber: data.phone,
+        };
+        const response = await apiService.post<registerResponseDTO, regRequestDTO>(url, request);
+        if (response.status === 201) {
+            setSuccess(true);
+        }
+        else if (response.status === 404) {
+        }
+        else{
+        }
+    };
+
     return (
-        <Box
-            sx={{m: '3rem'}}
-        >
+        <Box sx={{ m: '3rem' }}>
             <Container maxWidth="sm">
                 <Card>
                     <Typography variant="h1" align="center" gutterBottom>
@@ -18,7 +43,7 @@ const RegPage: React.FC = () => {
                     </Typography>
                     <Box
                         component="form"
-                        onSubmit={handleSubmit(onSubmit)}
+                        onSubmit={handleSubmit(reg)}
                         sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
                     >
                         {/* Организация */}
@@ -34,8 +59,7 @@ const RegPage: React.FC = () => {
                         </FormControl>
 
                         {/* Наименование органа */}
-                        <FormControl
-                        >
+                        <FormControl>
                             <TextField
                                 {...register('departmentName')}
                                 variant="outlined"
@@ -47,9 +71,7 @@ const RegPage: React.FC = () => {
                         </FormControl>
 
                         {/* ФИО */}
-                        <FormControl
-                            sx={{display: 'flex', flexDirection: 'column', gap: 2}}
-                        >
+                        <FormControl sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             <TextField
                                 {...register('firstName')}
                                 variant="outlined"
@@ -66,25 +88,15 @@ const RegPage: React.FC = () => {
                                 error={!!errors.lastName}
                                 helperText={errors.lastName?.message}
                             />
-                            <TextField
-                                {...register('middleName')}
-                                variant="outlined"
-                                fullWidth
-                                label="Отчество"
-                                error={!!errors.middleName}
-                                helperText={errors.middleName?.message}
-                            />
                         </FormControl>
 
                         {/* Контакты */}
-                        <FormControl
-                            sx={{display: 'flex', flexDirection: 'column', gap: 2}}
-                        >
+                        <FormControl sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             <TextField
                                 {...register('phone')}
                                 variant="outlined"
                                 fullWidth
-                                placeholder='+7 (9xx) xxx-xx-xx'
+                                placeholder="+7 (9xx) xxx-xx-xx"
                                 label="Номер"
                                 error={!!errors.phone}
                                 helperText={errors.phone?.message}
@@ -94,7 +106,7 @@ const RegPage: React.FC = () => {
                                 variant="outlined"
                                 fullWidth
                                 label="Почта"
-                                placeholder='example@mail.com'
+                                placeholder="example@mail.com"
                                 error={!!errors.email}
                                 helperText={errors.email?.message}
                             />
@@ -106,12 +118,11 @@ const RegPage: React.FC = () => {
                         </Button>
 
                         {/* Сообщение об ошибке */}
-                        {errors.root && (
-                            <Alert severity="error">{errors.root.message}</Alert>
-                        )}
+                        {errors.root && <Alert severity="error">{errors.root.message}</Alert>}
                         <Button component={Link} to={'/auth'}>
                             Войти
                         </Button>
+                        {success && <Alert severity="success">Заявка отправлена</Alert>}
                     </Box>
                 </Card>
             </Container>

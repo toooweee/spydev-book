@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, GeoJSON, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { convertGeoJSON } from '../Helpers/MapPageHelpers';
@@ -88,6 +88,15 @@ const MapPage = () => {
         alert(feature.id);
     };
 
+    function ClickHandler() {
+        useMapEvents({
+            click(e) {
+                console.log('Координаты клика:', e.latlng);
+            },
+        });
+        return null;
+    }
+
     return (
         <div style={{ padding: '20px', height: '100vh' }}>
             <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Карта героев и муниципальных образований</h1>
@@ -108,6 +117,7 @@ const MapPage = () => {
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
 
+                    <ClickHandler />
                     {/* Рендер муниципальных данных */}
                     {municipalData &&
                         municipalData.map((layer, index) => (
@@ -115,6 +125,14 @@ const MapPage = () => {
                                 key={`municipal-${index}`}
                                 data={layer}
                                 style={geoJsonStyle}
+                                eventHandlers={{
+                                    click: (e) => {
+                                        // e.propagatedFrom - ссылка на конкретный слой,
+                                        // у которого, как правило, есть свойство feature
+                                        const clickedFeature = e.propagatedFrom.feature;
+                                        console.log('Клик по фиче:', clickedFeature);
+                                    }
+                                }}
                                 onEachFeature={(feature, layer) => {
                                     if (feature.properties) {
                                         const popupContent = Object.entries(feature.properties)

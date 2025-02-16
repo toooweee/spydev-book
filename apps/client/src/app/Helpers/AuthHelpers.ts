@@ -9,13 +9,26 @@ export interface authRequestDTO {
     password: string
 }
 
+export interface regRequestDTO {
+    email: string;
+    government: string;
+    governmentName: string;
+    name: string;
+    surname: string;
+    phoneNumber: string;
+}
+
 export interface registerResponseDTO {
     id: string;
     email: string;
-    password: string;
-    createdAt: string;
-    updatedAt: string;
-    roles: string;
+    government: string;
+    governmentName: string;
+    name: string;
+    surname: string;
+    phoneNumber: string;
+    createdAt: string; // или Date, если парсите на фронте
+    status: string;    // при желании можно сделать enum
+    adminComment: string | null;
 }
 
 export interface loginResponseDTO {

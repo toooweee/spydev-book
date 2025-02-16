@@ -59,6 +59,19 @@ export class UserController {
         return this.userService.createRegistrationRequest(createRegisterRequestDto);
     }
 
+    @UseGuards(RolesGuard)
+    @Roles('ADMIN')
+    @Get('/registration-request')
+    @ApiOperation({ summary: 'Получить все заявки на рег' })
+    @ApiResponse({
+        status: 200,
+        description: 'Все заявки на регистрацию',
+    })
+    async getAll() {
+        return this.userService.getAllRequests();
+    }
+
+
     // 2. Одобрение заявки (только для админа)
     @Patch('/registration-request/:id/approve')
     @UseGuards(RolesGuard)
