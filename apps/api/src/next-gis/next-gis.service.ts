@@ -3,11 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
-import * as FormData from 'form-data';
-
-import wellknown from 'wellknown';
-import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
-import buffer from '@turf/buffer';
+import FormData from 'form-data';
+import * as Multer from 'multer';
 
 @Injectable()
 export class NextGisService {
@@ -130,6 +127,20 @@ export class NextGisService {
         }
     }
 
+    async getDeceased(id: number) {
+        await this.ensureAuth();
+        try {
+            const response = await this.axiosInstance.get(
+                `/resource/${this.configService.get('LAYER_ID')}/feature/${id}`,
+            );
+            // Явное возвращение всех полей записи
+            const { id: recordId, vid, geom, fields, extensions } = response.data;
+            return { id: recordId, vid, geom, fields, extensions };
+        } catch (e) {
+            throw new HttpException(`Failed to get records, ${e}`, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // Создание новой записи
     async addRecord(data: any): Promise<any> {
         await this.ensureAuth();
@@ -174,21 +185,49 @@ export class NextGisService {
         }
     }
 
-    // Прикрепление файла к записи (пример)
-    async attachFileToRecord(recordId: number, fileId: string): Promise<any> {
+    // Прикрепление файла к записи (с использованием FormData и Multer)
+    async attachFileToRecord(recordId: number, file: Express.Multer.File): Promise<any> {
         await this.ensureAuth();
         try {
-            const response = await this.axiosInstance.post(
-                `/resource/${this.configService.get('LAYER_ID')}/feature/${recordId}/attachment/`,
-                {
-                    name: `file_${fileId}`,
-                    size: 100110,
-                    mime_type: 'image/jpeg',
-                    file_upload: { id: fileId, size: 100110 },
+            // Шаг 1. Загрузка файла на сервер
+            const uploadFormData = new FormData();
+            // Обратите внимание: имя поля должно соответствовать требованиям API (например, 'file')
+            uploadFormData.append('file', file.buffer, {
+                filename: file.originalname,
+                contentType: file.mimetype,
+                knownLength: file.size,
+            });
+            // Также можно передать имя файла, если API это требует
+            uploadFormData.append('name', file.originalname);
+
+            const uploadHeaders = uploadFormData.getHeaders();
+            const uploadResponse = await this.axiosInstance.post('/component/file_upload/', uploadFormData, {
+                headers: uploadHeaders,
+            });
+
+            const uploadMeta = uploadResponse.data.upload_meta;
+            if (!uploadMeta || uploadMeta.length === 0) {
+                throw new Error('Ошибка загрузки файла');
+            }
+            const uploadedFile = uploadMeta[0]; // Получаем объект файла с id и размером
+
+            // Шаг 2. Прикрепление файла к записи через JSON
+            const attachmentBody = {
+                name: file.originalname,
+                size: file.size,
+                mime_type: file.mimetype,
+                file_upload: {
+                    id: uploadedFile.id,
+                    size: file.size,
                 },
+            };
+
+            const attachResponse = await this.axiosInstance.post(
+                `/resource/${this.configService.get('LAYER_ID')}/feature/${recordId}/attachment/`,
+                attachmentBody, // Отправляем JSON, axios сам установит Content-Type: application/json
             );
-            this.logger.log(`Файл прикреплён к записи ${recordId}: ${JSON.stringify(response.data)}`);
-            return response.data;
+            this.logger.log(`Файл прикреплён к записи ${recordId}: ${JSON.stringify(attachResponse.data)}`);
+            return attachResponse.data;
         } catch (error) {
             this.logger.error('Ошибка при прикреплении файла к записи', error);
             throw error;
@@ -205,74 +244,6 @@ export class NextGisService {
         } catch (error) {
             this.logger.error('Ошибка при удалении вложения', error);
             throw error;
-        }
-    }
-
-    // Новый метод для обработки клика с карты.
-    // Фронтенд должен отправлять данные о клике в виде объекта:
-    // Если клик происходит по точке, можно отправить { geom: "POINT(3948446 489723)" }
-    // Если же отправляется полигон, то { geom: "POLYGON((...))" }
-    // Метод преобразует точку в буфер (полигон) и затем ищет героя, чья точка попадает внутрь.
-    async handleClick(clickData: any): Promise<any> {
-        this.logger.log(`Получен клик с данными: ${JSON.stringify(clickData)}`);
-
-        if (!clickData.geom) {
-            return { message: 'Отсутствует поле geom' };
-        }
-
-        // Парсим переданную WKT-строку
-        const parsedClick = wellknown.parse(clickData.geom);
-        if (!parsedClick) {
-            return { message: 'Неверный формат WKT для клика' };
-        }
-
-        let clickFeature: GeoJSON.Feature<GeoJSON.Polygon>;
-        if (parsedClick.type === 'Point') {
-            // Если пришла точка, создаём буфер (полигон) вокруг неё (например, радиус 10 метров)
-            const pointFeature: GeoJSON.Feature<GeoJSON.Point> = {
-                type: 'Feature',
-                geometry: parsedClick as GeoJSON.Point,
-                properties: {},
-            };
-            const buffered = buffer(pointFeature, 10, { units: 'meters' });
-            // Предполагается, что буфер возвращает Feature с типом Polygon
-            clickFeature = buffered as GeoJSON.Feature<GeoJSON.Polygon>;
-        } else if (parsedClick.type === 'Polygon' || parsedClick.type === 'MultiPolygon') {
-            // Если пришёл полигон, оборачиваем его в Feature
-            clickFeature = {
-                type: 'Feature',
-                geometry: parsedClick as GeoJSON.Polygon,
-                properties: {},
-            };
-        } else {
-            return { message: 'Геометрия клика должна быть точкой или полигоном' };
-        }
-
-        // Получаем все записи (героев) из слоя
-        const records = await this.getRecords();
-
-        // Ищем героя, у которого геометрия (POINT) попадает в область клика
-        const matchingHero = records.find((record) => {
-            if (record.geom) {
-                const parsedHero = wellknown.parse(record.geom);
-                if (parsedHero && parsedHero.type === 'Point') {
-                    const heroFeature: GeoJSON.Feature<GeoJSON.Point> = {
-                        type: 'Feature',
-                        geometry: parsedHero as GeoJSON.Point,
-                        properties: {},
-                    };
-                    return booleanPointInPolygon(heroFeature, clickFeature);
-                }
-            }
-            return false;
-        });
-
-        if (matchingHero) {
-            this.logger.log(`Найден герой: ${JSON.stringify(matchingHero)}`);
-            return { message: 'Герой найден', hero: matchingHero };
-        } else {
-            this.logger.log('Герой не найден по клику');
-            return { message: 'Герой не найден', clickData };
         }
     }
 }
