@@ -4,4 +4,7 @@ export const API_CONFIG = {
     AUTH_REGISTER: 'auth/register',
     AUTH_LOGOUT: 'auth/logout',
     TOKEN: 'token/refresh',
+    NEXT_GIS: 'next-gis/',
+    MUNICIPALITET: 'municipalities',
+    LAYER: 'layer'
 };
