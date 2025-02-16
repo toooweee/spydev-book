@@ -1,42 +1,70 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+    // This is your Prisma schema file,
+    // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+    // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+    // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-generator client {
-    provider = "prisma-client-js"
-}
+    generator client {
+        provider = "prisma-client-js"
+    }
 
-datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
-}
+    datasource db {
+        provider = "postgresql"
+        url      = env("DATABASE_URL")
+    }
 
-model User {
-    id        String   @id @default(uuid())
-    email     String   @unique
-    password  String
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-    roles     Role
-    Token     Token[]
+    model User {
+        id        String   @id @default(uuid())
+        email     String   @unique
+        password  String
+        createdAt DateTime @default(now()) @map("created_at")
+        updatedAt DateTime @updatedAt @map("updated_at")
 
-    @@map("users")
-}
+        government     String?
+        governmentName String? @map("government_name")
+        name           String
+        surname        String
+        phoneNumber    String  @map("phone_number")
 
-model Token {
-    token     String   @unique
-    exp       DateTime
-    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId    String
-    userAgent String   @map("user_agent")
+        roles Role
+        Token Token[]
 
-    @@unique([userId, userAgent], name: "userId_userAgent")
-    @@map("tokens")
-}
+        @@map("users")
+    }
 
-enum Role {
-    ADMIN
-    USER
-}
+    model RegistrationRequest {
+        id             String        @id @default(uuid())
+        email          String        @unique
+        government     String?
+        governmentName String?       @map("government_name")
+        name           String
+        surname        String
+        phoneNumber    String        @map("phone_number")
+        createdAt      DateTime      @default(now()) @map("created_at")
+        status         RequestStatus @default(PENDING)
+        adminComment   String?       @map("admin_comment")
+
+        @@map("registration_requests")
+    }
+
+    enum RequestStatus {
+        PENDING
+        APPROVED
+        REJECTED
+    }
+
+    model Token {
+        token     String   @unique
+        exp       DateTime
+        user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+        userId    String
+        userAgent String   @map("user_agent")
+
+        @@unique([userId, userAgent], name: "userId_userAgent")
+        @@map("tokens")
+    }
+
+    enum Role {
+        ADMIN
+        USER
+    }

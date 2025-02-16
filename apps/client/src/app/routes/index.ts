@@ -1,10 +1,10 @@
 import AuthPage from '../pages/AuthPage';
 import MainPage from '../pages/MainPage';
 import RegPage from '../pages/RegPage';
-import MapPage from '../pages/MapPage';
 import PersonalAccountPage from '../pages/PersonalAccountPage';
 import MemoryFormPage from '../pages/MemoryFormPage';
 import HeroPage from '../pages/HeroPage';
+import MapPage from '../components/MapPage';
 
 export interface RProps {
     path: string;
