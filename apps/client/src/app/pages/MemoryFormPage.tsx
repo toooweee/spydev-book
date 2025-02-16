@@ -15,7 +15,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { Dayjs } from 'dayjs';
 import { useFileChange } from '../actionPages/MemoryFormPageActions';
 import UploadPhoto from '../components/UploadPhoto';
-import { Conflict } from '../Helpers/MemoryFormPageHelpers';
+import { Conflict, OrenburgMunicipalities } from '../Helpers/MemoryFormPageHelpers';
 
 const MemoryFormPage: React.FC = () => {
     const { handleFileChange, photoPreview, pageInfo, setPageInfo } = useFileChange();
@@ -73,12 +73,15 @@ const MemoryFormPage: React.FC = () => {
                                         />
                                     </Box>
                                 </LocalizationProvider>
-                                <TextField
-                                    label="Район"
-                                    variant="outlined"
+                                <Autocomplete
+                                    options={Object.values(OrenburgMunicipalities)}
                                     value={pageInfo.raion}
-                                    onChange={(e) => setPageInfo({ ...pageInfo, raion: e.target.value })}
-                                    fullWidth
+                                    onChange={(event, newValue) => {
+                                        setPageInfo((prev) => ({ ...prev, region: newValue }));
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField {...params} label="Регои" placeholder="Регои" />
+                                    )}
                                 />
                             </FormControl>
                         </Box>

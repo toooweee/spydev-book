@@ -28,6 +28,7 @@ const AuthPage: React.FC = () => {
                                 variant="outlined"
                                 fullWidth
                                 label="Логин"
+                                placeholder='example@mail.com'
                                 error={!!errors.login}
                                 helperText={errors.login?.message}
                             />
