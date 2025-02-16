@@ -1,5 +1,5 @@
 import React from 'react';
-import Slider from 'react-slick';
+// import Slider from 'react-slick';
 import HeroCard from './HeroCard';
 import { Box } from '@mui/material';
 import "slick-carousel/slick/slick.css";
@@ -44,11 +44,11 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ heroes }) => {
 
     return (
         <Box sx={{ maxWidth: '100%', overflow: 'hidden' }}>
-            <Slider {...settings}>
-                {heroes.map((hero) => (
-                    <HeroCard key={hero.id} {...hero} />
-                ))}
-            </Slider>
+            {/*<Slider {...settings}>*/}
+            {/*    {heroes.map((hero) => (*/}
+            {/*        <HeroCard key={hero.id} {...hero} />*/}
+            {/*    ))}*/}
+            {/*</Slider>*/}
         </Box>
     );
 };
