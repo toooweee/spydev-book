@@ -1,6 +1,7 @@
 import * as yup from 'yup';
 
 export const authValidationSchema = yup.object({
+
     login: yup
         .string()
         .required('Это поле обязательно'),

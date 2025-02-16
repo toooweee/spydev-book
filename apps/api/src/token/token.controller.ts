@@ -44,7 +44,7 @@ export class TokenController {
     private setRefreshTokenCookie(token: string, res: Response) {
         res.cookie(REFRESH_TOKEN, token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: false,
             sameSite: 'strict',
             maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
             path: '/',

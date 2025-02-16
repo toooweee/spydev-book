@@ -7,7 +7,6 @@ async function seedDatabase() {
     const saltRounds = 10;
 
     try {
-        // Генерация соли и хэша асинхронно
         const salt = await genSalt(saltRounds);
         const hashedPassword = await hash(plainPassword, salt);
 

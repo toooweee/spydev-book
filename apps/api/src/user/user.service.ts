@@ -88,6 +88,15 @@ export class UserService {
         });
     }
 
+    async getAllRequests() {
+        try {
+            return this.prismaService.registrationRequest.findMany();
+        } catch (e) {
+            throw new ForbiddenException(e);
+        }
+    }
+
+
     // Одобрение заявки администратором
     async approveRegistrationRequest(requestId: string) {
         const request = await this.prismaService.registrationRequest.findUnique({

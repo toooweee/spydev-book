@@ -4,6 +4,7 @@ import RegPage from '../pages/RegPage';
 import PersonalAccountPage from '../pages/PersonalAccountPage';
 import MemoryFormPage from '../pages/MemoryFormPage';
 import MapPage from '../components/MapPage';
+import ApplicationPage from '../pages/ApplicationPage';
 
 export interface RProps {
     path: string;
@@ -19,4 +20,5 @@ export const routes: RProps[] = [
     {path: '/map', element: MapPage, exact: true},
     {path: '/user', element: PersonalAccountPage, exact: true},
     {path: '/user/createPage', element: MemoryFormPage, exact: true},
+    {path: '/admin/applications', element: ApplicationPage, exact: true},
 ]

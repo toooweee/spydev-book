@@ -1,9 +1,8 @@
 import axios, {
     AxiosInstance,
     AxiosRequestConfig,
-    InternalAxiosRequestConfig,
-    AxiosHeaders,
-    AxiosError, AxiosResponse
+    AxiosError,
+    AxiosResponse,
 } from 'axios';
 
 interface ApiResponse<T> {
@@ -12,12 +11,8 @@ interface ApiResponse<T> {
     statusText: string;
 }
 
-interface ExtendedAxiosResponse<T = any> extends AxiosResponse<T> {
-    customData?: T;
-    customStatus?: number;
-    customStatusText?: string;
-}
-
+// Можно не усложнять и убрать кастомные поля из интерцепторов
+// Но если хотите оставить, можно использовать интерфейс ExtendedAxiosResponse
 class ApiService {
     private instance: AxiosInstance;
 
@@ -27,99 +22,113 @@ class ApiService {
             timeout: 10000,
         });
 
+        // Интерцептор запросов (добавляет токен, если он есть)
         this.instance.interceptors.request.use(
-            (config: InternalAxiosRequestConfig) => {
+            (config) => {
                 const token = localStorage.getItem('token');
                 if (token) {
-                    if (!config.headers) {
-                        config.headers = new AxiosHeaders();
-                    }
-                    config.headers.set('Authorization', `Bearer ${token}`);
+                    config.headers = config.headers ?? {};
+                    config.headers.Authorization = `Bearer ${token}`;
                 }
                 return config;
             },
-            (error: AxiosError) => Promise.reject(error)
+            (error: AxiosError) => Promise.reject(error),
         );
 
+        // Интерцептор ответов: в случае ошибки делаем логирование
         this.instance.interceptors.response.use(
             (response: AxiosResponse) => {
-                return {
-                    ...response,
-                    customData: response.data,
-                    customStatus: response.status,
-                    customStatusText: response.statusText,
-                } as ExtendedAxiosResponse;
+                // Можно вернуть ответ как есть (или навесить свои поля)
+                return response;
             },
             (error: AxiosError) => {
-                if (axios.isAxiosError(error)) {
-                    const { response } = error;
-                    if (response && response.status) {
-                        switch (response.status) {
-                            case 401:
-                                console.error('Unauthorized: Пользователь не авторизован');
-                                break;
-                            case 403:
-                                console.error('Forbidden: Доступ запрещен');
-                                break;
-                            case 404:
-                                console.error('Not Found: Ресурс не найден');
-                                break;
-                            default:
-                                if (response.status >= 500) {
-                                    console.error('Server Error: Сервер вернул ошибку');
-                                }
-                        }
+                // Тут можно что-то залогировать, если статус известен
+                if (axios.isAxiosError(error) && error.response) {
+                    switch (error.response.status) {
+                        case 401:
+                            console.error('Unauthorized: Пользователь не авторизован');
+                            break;
+                        case 403:
+                            console.error('Forbidden: Доступ запрещен');
+                            break;
+                        case 404:
+                            console.error('Not Found: Ресурс не найден');
+                            break;
+                        default:
+                            if (error.response.status >= 500) {
+                                console.error('Server Error: Сервер вернул ошибку');
+                            }
                     }
                 }
+                // Пробрасываем ошибку дальше, чтобы поймать её в методе (try/catch)
                 return Promise.reject(error);
-            }
+            },
         );
     }
 
     public async get<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-        const response = await this.instance.get<T>(url, config);
-        return {
-            data: (response as ExtendedAxiosResponse<T>).customData || response.data,
-            status: (response as ExtendedAxiosResponse<T>).customStatus || response.status!,
-            statusText: (response as ExtendedAxiosResponse<T>).customStatusText || response.statusText!,
-        };
+        try {
+            const response = await this.instance.get<T>(url, config);
+            return {
+                data: response.data,
+                status: response.status,
+                statusText: response.statusText,
+            };
+        } catch (error) {
+            return this.handleError<T>(error);
+        }
     }
 
-    public async post<T, D>(
-        url: string,
-        data: D,
-        config?: AxiosRequestConfig
-    ): Promise<ApiResponse<T>> {
-        const response = await this.instance.post<T>(url, data, config);
-        return {
-            data: (response as ExtendedAxiosResponse<T>).customData || response.data,
-            status: (response as ExtendedAxiosResponse<T>).customStatus || response.status!,
-            statusText: (response as ExtendedAxiosResponse<T>).customStatusText || response.statusText!,
-        };
+    public async post<T, D>(url: string, data: D, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+        try {
+            const response = await this.instance.post<T>(url, data, config);
+            return {
+                data: response.data,
+                status: response.status,
+                statusText: response.statusText,
+            };
+        } catch (error) {
+            return this.handleError<T>(error);
+        }
     }
 
-    public async put<T, D>(
-        url: string,
-        data: D,
-        config?: AxiosRequestConfig
-    ): Promise<ApiResponse<T>> {
-        const response = await this.instance.put<T>(url, data, config);
-        return {
-            data: (response as ExtendedAxiosResponse<T>).customData || response.data,
-            status: (response as ExtendedAxiosResponse<T>).customStatus || response.status!,
-            statusText: (response as ExtendedAxiosResponse<T>).customStatusText || response.statusText!,
-        };
+    public async put<T, D>(url: string, data: D, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+        try {
+            const response = await this.instance.put<T>(url, data, config);
+            return {
+                data: response.data,
+                status: response.status,
+                statusText: response.statusText,
+            };
+        } catch (error) {
+            return this.handleError<T>(error);
+        }
     }
 
     public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-        const response = await this.instance.delete<T>(url, config);
-        return {
-            data: (response as ExtendedAxiosResponse<T>).customData || response.data,
-            status: (response as ExtendedAxiosResponse<T>).customStatus || response.status!,
-            statusText: (response as ExtendedAxiosResponse<T>).customStatusText || response.statusText!,
-        };
+        try {
+            const response = await this.instance.delete<T>(url, config);
+            return {
+                data: response.data,
+                status: response.status,
+                statusText: response.statusText,
+            };
+        } catch (error) {
+            return this.handleError<T>(error);
+        }
+    }
+
+    private handleError<T>(error: unknown): ApiResponse<T> {
+        if (axios.isAxiosError(error) && error.response) {
+            return {
+                data: error.response.data as T,
+                status: error.response.status,
+                statusText: error.response.statusText || 'Error',
+            };
+        }
+        throw error;
     }
 }
 
-const apiService = new ApiService('http://localhost:3000/api'); // Замените на ваш URL
+const apiService = new ApiService('http://localhost:3000/api');
 export default apiService;

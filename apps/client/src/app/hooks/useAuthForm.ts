@@ -16,5 +16,6 @@ export const useAuth = () => {
         register,
         handleSubmit,
         errors,
+        setError
     };
 };
