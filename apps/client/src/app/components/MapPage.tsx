@@ -1,10 +1,10 @@
-'use client';
-
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import proj4 from 'proj4';
 import L from 'leaflet';
+import { convertGeoJSON } from '../Helpers/MapPageHelpers';
+import { fetchLayerData, fetchLayers } from '../Service/MapService';
+import { Feature, FeatureCollection, Geometry } from '../Helpers/MapInterfaces';
 
 // Фикс для иконок маркеров
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -14,153 +14,78 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-interface HeroFeature {
-    id: number;
-    geometry: {
-        coordinates: [number, number];
-    };
-    properties: {
-        fio: string;
-        info: string;
-        kontrakt?: string;
-        nagrads?: string;
-    };
-}
-
-const login = async (): Promise<string | null> => {
-    try {
-        const response = await fetch('http://localhost:3000/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                email: 'hackathon_28',
-                password: 'hackathon_28_25',
-            }),
-        });
-
-        if (!response.ok) throw new Error('Ошибка авторизации');
-        const data = await response.json();
-        localStorage.setItem('accessToken', data.accessToken);
-        return data.accessToken;
-    } catch (error) {
-        console.error('Ошибка при входе:', error);
-        return null;
-    }
-};
-
 const MapPage = () => {
-    const [heroData, setHeroData] = useState<HeroFeature[]>([]);
-    const [municipalData, setMunicipalData] = useState<any[]>([]);
+    const [heroData, setHeroData] = useState<FeatureCollection[]>([]);
+    const [municipalData, setMunicipalData] = useState<FeatureCollection[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
     const [mapCenter] = useState<[number, number]>([52.52, 56.04]);
 
-    const convertCoords = (coords: [number, number]): [number, number] => {
-        return proj4('EPSG:3857', 'EPSG:4326', coords);
-    };
-
-    const convertGeoJSON = (geojson: any) => {
-        const convertCoordinates = (coords: any[]): any[] => {
-            // Обрабатываем вложенные массивы координат
-            if (Array.isArray(coords[0])) {
-                return coords.map((coord) => convertCoordinates(coord));
-            }
-
-            // Преобразуем только пары координат
-            if (coords.length >= 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
-                return convertCoords([coords[0], coords[1]]);
-            }
-
-            return coords;
-        };
-
-        if (!geojson || !geojson.features) return null;
-
-        return {
-            type: 'FeatureCollection',
-            features: geojson.features.map((feature: any) => ({
-                ...feature,
-                geometry: {
-                    ...feature.geometry,
-                    coordinates: convertCoordinates(feature.geometry.coordinates),
-                },
-            })),
-        };
-    };
-
     useEffect(() => {
-        const fetchData = async () => {
+        const loadData = async () => {
+            setLoading(true);
+
             try {
-                const token = await login();
-                if (!token) throw new Error('Не удалось авторизоваться');
+                const municipalitiesRes = await fetchLayers();
 
-                // Загрузка муниципалитетов
-                const municipalitiesRes = await fetch('http://localhost:3000/api/next-gis/municipalities', {
-                    headers: { Authorization: token },
-                });
-
-                // Добавляем проверку статуса ответа
-                if (!municipalitiesRes.ok) {
-                    throw new Error(`HTTP error! status: ${municipalitiesRes.status}`);
-                }
-
-                const { layers } = await municipalitiesRes.json();
-                console.log('Municipal layers from API:', layers);
-
-                // Если слои все равно пустые, используем хардкод из логов
-                const finalLayers = layers.length > 0 ? layers : [8806, 7980, 7974, 9];
-                console.log('Using layers:', finalLayers);
-
-                const municipalities = await Promise.all(
-                    finalLayers.map(async (id: number) => {
-                        try {
-                            const res = await fetch(`http://localhost:3000/api/next-gis/layer/${id}`, {
-                                headers: { Authorization: token },
-                            });
-
-                            // Детальный лог статуса ответа
-                            console.log(`Layer ${id} status:`, res.status);
-
-                            if (!res.ok) {
-                                console.error(`Ошибка загрузки слоя ${id}:`, await res.text());
-                                return null;
-                            }
-
-                            const data = await res.json();
-                            console.log(`Layer ${id} data:`, data);
-
-                            const converted = convertGeoJSON(data);
-                            if (!converted?.features?.length) {
-                                console.warn(`Слой ${id} не содержит геоданных`);
-                                return null;
-                            }
-
-                            // Проверка координат
-                            console.log(`Converted layer ${id} sample:`, converted.features[0].geometry.coordinates);
-                            return converted;
-                        } catch (e) {
-                            console.error(`Критическая ошибка загрузки слоя ${id}:`, e);
-                            return null;
+                const layerData = await Promise.all(
+                    municipalitiesRes.map(async (num) => {
+                        const layer = await fetchLayerData(num);
+                        if (!layer) return null;
+                        const converted = convertGeoJSON(layer);
+                        if (num === 9) {
+                            return { type: 'municipal', data: converted };
+                        } else {
+                            return { type: 'hero', data: converted };
                         }
                     }),
                 );
+                console.log(layerData);
 
-                setMunicipalData(municipalities.filter(Boolean));
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
-            } finally {
-                setLoading(false);
+                setMunicipalData(
+                    layerData
+                        .filter(
+                            (
+                                item,
+                            ): item is {
+                                type: string;
+                                data: FeatureCollection;
+                            } => item?.type === 'municipal' && item.data !== null,
+                        )
+                        .map((item) => item.data),
+                );
+
+                setHeroData(
+                    layerData
+                        .filter(
+                            (
+                                item,
+                            ): item is {
+                                type: string;
+                                data: FeatureCollection;
+                            } => item?.type === 'hero' && item.data !== null,
+                        )
+                        .map((item) => item.data),
+                );
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
             }
+
+            setLoading(false);
         };
 
-        fetchData();
+        loadData();
     }, []);
 
     const geoJsonStyle = {
-        color: '#ff7800',
+        color: 'rgba(55,0,255,0.38)',
         weight: 2,
-        fillColor: '#ff7800',
+        fillColor: '#3700ff',
         fillOpacity: 0.2,
+    };
+
+    const handleMarkerClick = (feature: Feature) => {
+        alert(feature.id);
     };
 
     return (
@@ -183,56 +108,58 @@ const MapPage = () => {
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
 
-                    {municipalData.map((layer, index) => (
-                        <GeoJSON
-                            key={`municipal-${index}`}
-                            data={layer}
-                            style={geoJsonStyle}
-                            onEachFeature={(feature, layer) => {
-                                if (feature.properties) {
-                                    const popupContent = Object.entries(feature.properties)
-                                        .filter(([key]) => !key.startsWith('@'))
-                                        .map(([key, value]) => `<p><b>${key}:</b> ${value}</p>`)
-                                        .join('');
-
-                                    layer.bindPopup(`
+                    {/* Рендер муниципальных данных */}
+                    {municipalData &&
+                        municipalData.map((layer, index) => (
+                            <GeoJSON
+                                key={`municipal-${index}`}
+                                data={layer}
+                                style={geoJsonStyle}
+                                onEachFeature={(feature, layer) => {
+                                    if (feature.properties) {
+                                        const popupContent = Object.entries(feature.properties)
+                                            .filter(([key]) => !key.startsWith('@'))
+                                            .map(([key, value]) => `<p><b>${key}:</b> ${value}</p>`)
+                                            .join('');
+                                        layer.bindPopup(`
                     <div style="max-width: 300px">
                       <h3 style="margin: 0 0 10px">${feature.properties.display_name || 'Объект'}</h3>
                       ${popupContent}
                     </div>
                   `);
-                                }
-                            }}
-                        />
-                    ))}
+                                    }
+                                }}
+                            />
+                        ))}
 
-                    {heroData.map((feature) => {
-                        const [lng, lat] = convertCoords(feature.geometry.coordinates);
-                        return (
-                            <Marker key={`hero-${feature.id}`} position={[lat, lng]}>
-                                <Popup>
-                                    <div style={{ minWidth: '200px' }}>
-                                        <h3 style={{ margin: '0 0 10px' }}>{feature.properties.fio}</h3>
-                                        <p>{feature.properties.info}</p>
-                                        {feature.properties.kontrakt && (
-                                            <p style={{ margin: '5px 0' }}>
-                                                <b>Контракт:</b> {feature.properties.kontrakt}
-                                            </p>
-                                        )}
-                                        {feature.properties.nagrads && (
-                                            <p style={{ margin: '5px 0' }}>
-                                                <b>Награды:</b> {feature.properties.nagrads}
-                                                <button onClick={() => console.log(feature)}>Подробнее о герое</button>
-                                            </p>
-                                        )}
-                                    </div>
-                                </Popup>
-                            </Marker>
-                        );
-                    })}
+                    {/* Рендер маркеров героев */}
+                    {heroData &&
+                        heroData.map((layer, index) =>
+                            layer.features.map((feature, idx) => {
+                                if (feature.geometry && feature.geometry.type === 'Point') {
+                                    const coordinates = feature.geometry.coordinates as [number, number];
+                                    if (coordinates && coordinates.length >= 2) {
+                                        return (
+                                            <Marker
+                                                key={`hero-${index}-${idx}`}
+                                                position={[coordinates[1], coordinates[0]]} // [широта, долгота]
+                                                eventHandlers={{
+                                                    click: () => {
+                                                        handleMarkerClick(feature);
+                                                    },
+                                                }}
+                                            >
+                                            </Marker>
+                                        );
+                                    }
+                                }
+                                return null;
+                            }),
+                        )}
                 </MapContainer>
             )}
         </div>
     );
 };
+
 export default MapPage;

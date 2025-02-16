@@ -29,7 +29,7 @@ class ApiService {
 
         this.instance.interceptors.request.use(
             (config: InternalAxiosRequestConfig) => {
-                const token = localStorage.getItem('authToken');
+                const token = localStorage.getItem('token');
                 if (token) {
                     if (!config.headers) {
                         config.headers = new AxiosHeaders();

@@ -2,24 +2,15 @@ import { authRequestDTO, loginResponseDTO, registerResponseDTO, validateFormData
 import { API_CONFIG } from '../../config';
 import apiService from './ApiService';
 
-export const auth = async (data: authRequestDTO) => {
+export const login = async (data: authRequestDTO) => {
     const url = `${API_CONFIG.HOST}${API_CONFIG.AUTH_LOGIN}`;
-    console.log(url);
     const request: authRequestDTO = {
         email: data.email,
         password: data.password,
     };
-    if (true) {
-        //если авторизация
-        const response = await apiService.post<loginResponseDTO, authRequestDTO>(url, request);
-        if (response.status === 201) {
-            localStorage.setItem('token', response.data.accessToken.split(' ')[1]);
-        }
-        return response.data.accessToken.split(' ')[1];
+    const response = await apiService.post<loginResponseDTO, authRequestDTO>(url, request);
+    if (response.status === 201) {
+        localStorage.setItem('token', response.data.accessToken.split(' ')[1]);
     }
-    const response = await apiService.post<registerResponseDTO, authRequestDTO>(url, request);
-    if (response.status === 204) {
-        //успех
-    }
-    return response.data;
+    return response.data.accessToken.split(' ')[1];
 };
