@@ -2,9 +2,10 @@ import React, { FC, useMemo, useEffect } from 'react';
 import { Box, Button, Card, CardContent, Typography } from '@mui/material';
 import { Dayjs } from 'dayjs';
 import { useNavigate } from 'react-router-dom';
+import { PageInfo } from '../Helpers/MemoryFormPageHelpers';
 
 interface HeroCardProps {
-    id: string;
+    id: number;
     firstName: string;
     middleName: string;
     lastName: string;
@@ -14,6 +15,7 @@ interface HeroCardProps {
 
 const HeroCard: FC<HeroCardProps> = ({ id, firstName, middleName, lastName, lifeDate, photo }) => {
     const navigate = useNavigate();
+
 
     const photoURL = useMemo(() => (photo ? URL.createObjectURL(photo) : null), [photo]);
 

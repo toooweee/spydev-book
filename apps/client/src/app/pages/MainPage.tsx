@@ -12,8 +12,7 @@ import {
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import dayjs, { Dayjs } from 'dayjs';
-import HeroCard from '../components/HeroCard';
-import { heroes } from '../Helpers/MemoryFormPageHelpers';
+import { Conflict, mockPageInfoList } from '../Helpers/MemoryFormPageHelpers';
 import HeroSlider from '../components/HeroSlider';
 
 interface FindHero {
@@ -39,12 +38,14 @@ const MainPage: React.FC = () => {
     return (
         <Container maxWidth="md" sx={{ py: 4 }}>
             <Box sx={{ textAlign: 'center', mb: '5rem', mt: '5rem' }}>
-                <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', fontSize: {xs: '2rem', sm: '4rem'}}}>
+                <Typography
+                    variant="h3"
+                    component="h1"
+                    sx={{ fontWeight: 'bold', fontSize: { xs: '2rem', sm: '4rem' } }}
+                >
                     КНИГА ПАМЯТИ ОРЕНБУРГСКОЙ ОБЛАСТИ
                 </Typography>
-                <Typography variant="subtitle1">
-                    Архив героев военных действий Оренбургской области
-                </Typography>
+                <Typography variant="subtitle1">Архив героев военных действий Оренбургской области</Typography>
             </Box>
             <Box>
                 <Typography variant="h5" sx={{ mb: 2 }}>
@@ -59,9 +60,7 @@ const MainPage: React.FC = () => {
                                     variant="outlined"
                                     fullWidth
                                     value={findHero.firstName}
-                                    onChange={(e) =>
-                                        setFindHero({ ...findHero, firstName: e.target.value })
-                                    }
+                                    onChange={(e) => setFindHero({ ...findHero, firstName: e.target.value })}
                                 />
                             </Grid>
                             <Grid item xs={12} md={6}>
@@ -70,9 +69,7 @@ const MainPage: React.FC = () => {
                                     variant="outlined"
                                     fullWidth
                                     value={findHero.lastName}
-                                    onChange={(e) =>
-                                        setFindHero({ ...findHero, lastName: e.target.value })
-                                    }
+                                    onChange={(e) => setFindHero({ ...findHero, lastName: e.target.value })}
                                 />
                             </Grid>
                             <Grid item xs={12} md={6}>
@@ -81,9 +78,7 @@ const MainPage: React.FC = () => {
                                     variant="outlined"
                                     fullWidth
                                     value={findHero.middleName}
-                                    onChange={(e) =>
-                                        setFindHero({ ...findHero, middleName: e.target.value })
-                                    }
+                                    onChange={(e) => setFindHero({ ...findHero, middleName: e.target.value })}
                                 />
                             </Grid>
                             <Grid item xs={12} md={6}>
@@ -116,13 +111,14 @@ const MainPage: React.FC = () => {
                     </FormControl>
                 </Card>
             </Box>
-            <Box>
-                <Box>
-                    <Typography variant='h2'>Герои ВОВ</Typography>
-                    <HeroSlider
-                        heroes={heroes}
-                    />
-                </Box>
+            <Box sx={{ mt: 6 }}>
+                <Typography variant="h4" sx={{ mb: 3 }}>
+                    Герои по категориям конфликтов
+                </Typography>
+                <HeroSlider
+                    conflicts={Conflict}
+                    heroes={mockPageInfoList}
+                />
             </Box>
         </Container>
     );

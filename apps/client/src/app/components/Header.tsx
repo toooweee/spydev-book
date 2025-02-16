@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppBar, Box, Button, Drawer, Tab, Tabs, Toolbar, Typography } from '@mui/material';
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import { Link, useLocation } from 'react-router-dom';
 import { Person3Outlined } from '@mui/icons-material';
-
-enum UserRole {
-    admin = 'admin',
-    default = 'default',
-}
+import { useAuth } from '../hooks/useAuth';
+import { UserRole } from './HeaderL';
 
 export const Header = () => {
     const location = useLocation();
@@ -16,8 +13,13 @@ export const Header = () => {
         0
     );
 
-    const [user, setUser] = useState<boolean>(true); // условие для пользователя
-    const [userRole, setUserRole] = useState<UserRole>(UserRole.default); // роль пользователя
+    const { user, userRole } = useAuth()
+
+    const logout = () => {
+        localStorage.removeItem("token");
+        window.location.reload(); // Обновление страницы для применения изменений
+    }
+
     const [openDrawer, setOpenDrawer] = useState(false); // открытие Drawer
 
     const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
@@ -91,6 +93,17 @@ export const Header = () => {
                                     </Tabs>
                                 </>
                             )}
+                            <Tabs
+                                value={tabValue}
+                                textColor="inherit"
+                                indicatorColor="secondary"
+                                orientation="vertical"
+                                sx={{ p: 2 }}
+                            >
+                                <Button onClick={logout}>
+                                    Выйти
+                                </Button>
+                            </Tabs>
                         </Drawer>
                     </>
                 )}
